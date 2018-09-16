@@ -806,7 +806,7 @@ class Analysis
         if (empty($label)) {
             return;
         }
-        error_log($label . ' depth=' . count(self::$timeMap) . ' time=' . floor((microtime(true) - self::$timeMap[$label]) * 1000) . 'ms' . "\n", 3, '/tmp/analysis.log');
+        error_log($_SERVER['REQUEST_URI'] . ' ' . $label . ' depth=' . count(self::$timeMap) . ' time=' . floor((microtime(true) - self::$timeMap[$label]) * 1000) . 'ms' . "\n", 3, '/tmp/analysis.log');
         unset(self::$timeMap[$label]);
     }
 }
