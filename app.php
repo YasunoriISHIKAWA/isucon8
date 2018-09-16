@@ -401,7 +401,9 @@ $app->delete('/api/events/{id}/sheets/{ranks}/{num}/reservation', function (Requ
     $num = $args['num'];
 
     $user = get_login_user($this);
-    $event = get_event($this->dbh, $event_id, $user['id']);
+    // org
+    //$event = get_event($this->dbh, $event_id, $user['id']);
+    $event = get_event_for_delete($this->dbh, $event_id);
 
     if (empty($event) || !$event['public']) {
         return res_error($response, 'invalid_event', 404);
@@ -441,6 +443,16 @@ $app->delete('/api/events/{id}/sheets/{ranks}/{num}/reservation', function (Requ
 
     return $response->withStatus(204);
 })->add($login_required);
+
+//TODO get_event_for_delete
+function get_event_for_delete(PDOWrapper $dbh, int $event_id): array
+{
+    $event = $dbh->select_row('SELECT * FROM events WHERE id = ?', $event_id);
+
+    if (!$event) {
+        return [];
+    }
+}
 
 function validate_rank(PDOWrapper $dbh, $rank)
 {
