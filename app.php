@@ -191,7 +191,7 @@ $app->get('/api/users/{id}', function (Request $request, Response $response, arr
         $rows = $app->dbh->select_all('SELECT event_id FROM reservations WHERE user_id = ? GROUP BY event_id ORDER BY MAX(IFNULL(canceled_at, reserved_at)) DESC LIMIT 5', $user['id']);
         foreach ($rows as $row) {
             //$event = get_event($app->dbh, $row['event_id']);
-            $event = get_event_summary($app->dbh, $row['event_id']);
+            $event = get_event_for_user_recent($app->dbh, $row['event_id']);
             foreach (array_keys($event['sheets']) as $rank) {
                 unset($event['sheets'][$rank]['detail']);
             }
@@ -468,6 +468,39 @@ function get_event_for_user(PDOWrapper $dbh, int $event_id, ?int $login_user_id 
     unset($event['closed_fg']);
 
     Analysis::timeEnd('get_event_for_user');
+    return $event;
+}
+
+function get_event_for_user_recent(PDOWrapper $dbh, int $event_id, ?int $login_user_id = null): array
+{
+    Analysis::time('get_event_for_user_recent');
+    $event = $dbh->select_row('SELECT * FROM events WHERE id = ?', $event_id);
+
+    if (!$event) {
+        return [];
+    }
+
+    $event['id'] = (int) $event['id'];
+
+    // zero fill
+    $event['total'] = 1000;
+    $event['remains'] = 0;
+
+    foreach (['S', 'A', 'B', 'C'] as $rank) {
+        $event['sheets'][$rank]['total'] = get_total_sheets_count($rank);
+        $event['sheets'][$rank]['remains'] = $event['sheets'][$rank]['total'] - get_sheets_reserve_count($dbh, $event_id, $rank);
+        $event['sheets'][$rank]['price'] = $event['price'] + get_sheet_price($rank);
+        $remains_count += $event['sheets'][$rank]['remains'];
+    }
+    $event['remains'] = $remains_count;
+
+    $event['public'] = $event['public_fg'] ? true : false;
+    $event['closed'] = $event['closed_fg'] ? true : false;
+
+    unset($event['public_fg']);
+    unset($event['closed_fg']);
+
+    Analysis::timeEnd('get_event_for_user_recent');
     return $event;
 }
 
