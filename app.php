@@ -316,7 +316,9 @@ function get_event(PDOWrapper $dbh, int $event_id, ?int $login_user_id = null): 
         ++$event['total'];
         ++$event['sheets'][$sheet['rank']]['total'];
 
+        Analysis::time('get_event/reservations');
         $reservation = $dbh->select_row('SELECT * FROM reservations WHERE event_id = ? AND sheet_id = ? AND canceled_at IS NULL GROUP BY event_id, sheet_id HAVING reserved_at = MIN(reserved_at)', $event['id'], $sheet['id']);
+        Analysis::timeEnd('get_event/reservations');
         if ($reservation) {
             $sheet['mine'] = $login_user_id && $reservation['user_id'] == $login_user_id;
             $sheet['reserved'] = true;
