@@ -356,6 +356,7 @@ $app->post('/api/events/{id}/actions/reserve', function (Request $request, Respo
     $rank = $request->getParsedBodyParam('sheet_rank');
 
     $user = get_login_user($this);
+    // org
     //$event = get_event($this->dbh, $event_id, $user['id']);
     $event = get_event_for_delete($this->dbh, $event_id);
 
@@ -575,7 +576,7 @@ $app->get('/admin/api/events/{id}', function (Request $request, Response $respon
     }
 
     return $response->withJson($event, null, JSON_NUMERIC_CHECK);
-})->add($admin_login_required);
+});//TODO ->add($admin_login_required);
 
 $app->post('/admin/api/events/{id}/actions/edit', function (Request $request, Response $response, array $args): Response {
     $event_id = $args['id'];
