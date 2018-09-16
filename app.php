@@ -356,7 +356,8 @@ $app->post('/api/events/{id}/actions/reserve', function (Request $request, Respo
     $rank = $request->getParsedBodyParam('sheet_rank');
 
     $user = get_login_user($this);
-    $event = get_event($this->dbh, $event_id, $user['id']);
+    //$event = get_event($this->dbh, $event_id, $user['id']);
+    $event = get_event_for_delete($this->dbh, $event_id);
 
     if (empty($event) || !$event['public']) {
         return res_error($response, 'invalid_event', 404);
