@@ -306,7 +306,6 @@ function get_event(PDOWrapper $dbh, int $event_id, ?int $login_user_id = null): 
 
     $sheets = $dbh->select_all('SELECT * FROM sheets ORDER BY `rank`, num');
     foreach ($sheets as $sheet) {
-        Analysis::time('get_event/foreach/1');
         $event['sheets'][$sheet['rank']]['price'] = $event['sheets'][$sheet['rank']]['price'] ?? $event['price'] + $sheet['price'];
 
         ++$event['total'];
@@ -333,7 +332,6 @@ function get_event(PDOWrapper $dbh, int $event_id, ?int $login_user_id = null): 
         }
 
         array_push($event['sheets'][$rank]['detail'], $sheet);
-        Analysis::timeEnd('get_event/foreach/1');
     }
 
     $event['public'] = $event['public_fg'] ? true : false;
