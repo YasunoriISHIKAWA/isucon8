@@ -586,7 +586,7 @@ $app->get('/admin/api/events/{id}', function (Request $request, Response $respon
     }
 
     return $response->withJson($event, null, JSON_NUMERIC_CHECK);
-});//TODO ->add($admin_login_required);
+})->add($admin_login_required);
 
 $app->post('/admin/api/events/{id}/actions/edit', function (Request $request, Response $response, array $args): Response {
     $event_id = $args['id'];
@@ -597,7 +597,9 @@ $app->post('/admin/api/events/{id}/actions/edit', function (Request $request, Re
         $public = 0;
     }
 
-    $event = get_event($this->dbh, $event_id);
+    //org
+    //$event = get_event($this->dbh, $event_id);
+    $event = get_event_for_delete($this->dbh, $event_id);
     if (empty($event)) {
         return res_error($response, 'not_found', 404);
     }
@@ -623,7 +625,9 @@ $app->post('/admin/api/events/{id}/actions/edit', function (Request $request, Re
 
 $app->get('/admin/api/reports/events/{id}/sales', function (Request $request, Response $response, array $args): Response {
     $event_id = $args['id'];
-    $event = get_event($this->dbh, $event_id);
+    //org
+    //$event = get_event($this->dbh, $event_id);
+    $event = get_event_for_delete($this->dbh, $event_id);
 
     $reports = [];
 
