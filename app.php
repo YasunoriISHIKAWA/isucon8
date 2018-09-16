@@ -618,8 +618,8 @@ $app->post('/admin/api/events/{id}/actions/edit', function (Request $request, Re
 $app->get('/admin/api/reports/events/{id}/sales', function (Request $request, Response $response, array $args): Response {
     $event_id = $args['id'];
     //org
-    $event = get_event($this->dbh, $event_id);
-    //$event = get_event_for_delete($this->dbh, $event_id);
+    //$event = get_event($this->dbh, $event_id);
+    $event = get_event_for_delete($this->dbh, $event_id);
 
     $reports = [];
 
