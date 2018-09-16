@@ -406,6 +406,15 @@ function get_event(PDOWrapper $dbh, int $event_id, ?int $login_user_id = null): 
         $event['sheets'][$rank]['remains'] = 0;
     }
 
+    $reservationList = $dbh->select_all('SELECT * FROM reservations WHERE event_id = ? AND canceled_at IS NULL ORDER BY sheet_id, reserved_at', $event['id']);
+    $reservationMap = [];
+    foreach ($reservationList as $reservation) {
+        if (isset($reservationMap[$reservation['sheet_id']])) {
+            continue;
+        }
+        $reservationMap[$reservation['sheet_id']] = $reservation;
+    }
+
     $sheets = $dbh->select_all('SELECT * FROM sheets ORDER BY `rank`, num');
     foreach ($sheets as $sheet) {
         $event['sheets'][$sheet['rank']]['price'] = $event['sheets'][$sheet['rank']]['price'] ?? $event['price'] + $sheet['price'];
@@ -413,7 +422,8 @@ function get_event(PDOWrapper $dbh, int $event_id, ?int $login_user_id = null): 
         ++$event['total'];
         ++$event['sheets'][$sheet['rank']]['total'];
 
-        $reservation = $dbh->select_row('SELECT * FROM reservations WHERE event_id = ? AND sheet_id = ? AND canceled_at IS NULL GROUP BY event_id, sheet_id HAVING reserved_at = MIN(reserved_at)', $event['id'], $sheet['id']);
+        //$reservation = $dbh->select_row('SELECT * FROM reservations WHERE event_id = ? AND sheet_id = ? AND canceled_at IS NULL GROUP BY event_id, sheet_id HAVING reserved_at = MIN(reserved_at)', $event['id'], $sheet['id']);
+        $reservation = isset($reservationMap[$sheet['id']]) ? $reservationMap[$sheet['id']] : null;
         if ($reservation) {
             $sheet['mine'] = $login_user_id && $reservation['user_id'] == $login_user_id;
             $sheet['reserved'] = true;
@@ -486,6 +496,7 @@ function get_event_for_user_recent(PDOWrapper $dbh, int $event_id, ?int $login_u
     $event['total'] = 1000;
     $event['remains'] = 0;
 
+    $remains_count = 0;
     foreach (['S', 'A', 'B', 'C'] as $rank) {
         $event['sheets'][$rank]['total'] = get_total_sheets_count($rank);
         $event['sheets'][$rank]['remains'] = $event['sheets'][$rank]['total'] - get_sheets_reserve_count($dbh, $event_id, $rank);
