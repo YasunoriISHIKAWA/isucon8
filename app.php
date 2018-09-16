@@ -452,6 +452,7 @@ function get_event_for_delete(PDOWrapper $dbh, int $event_id): array
     if (!$event) {
         return [];
     }
+    return $event;
 }
 
 function validate_rank(PDOWrapper $dbh, $rank)
