@@ -270,11 +270,13 @@ function get_events(PDOWrapper $dbh, ?callable $where = null): array
     }, array_filter($dbh->select_all('SELECT * FROM events ORDER BY id ASC'), $where));
 
     foreach ($event_ids as $event_id) {
-        $event = get_event($dbh, $event_id);
+        // org
+        //$event = get_event($dbh, $event_id);
+        $event = get_event_summary($dbh, $event_id);
 
-        foreach (array_keys($event['sheets']) as $rank) {
-            unset($event['sheets'][$rank]['detail']);
-        }
+        //foreach (array_keys($event['sheets']) as $rank) {
+        //    unset($event['sheets'][$rank]['detail']);
+        //}
 
         array_push($events, $event);
     }
@@ -282,6 +284,102 @@ function get_events(PDOWrapper $dbh, ?callable $where = null): array
     $dbh->commit();
 
     return $events;
+}
+
+
+//TODO 開発
+function get_event_summary($dbh, $event_id): array
+{
+    $event = $dbh->select_row('SELECT * FROM events WHERE id = ?', $event_id);
+
+    if (!$event) {
+        return [];
+    }
+
+    $event['id'] = (int) $event['id'];
+
+    // zero fill
+    $event['total'] = 1000;
+    $event['remains'] = 0;
+
+    $reserve_count = 0;
+    foreach (['S', 'A', 'B', 'C'] as $rank) {
+        $event['sheets'][$rank]['total'] = get_total_sheets_count($rank);
+        $event['sheets'][$rank]['remains'] = $event['sheets'][$rank]['total'] - get_sheets_reserve_count($event_id, $rank);
+        $event['sheets'][$rank]['price'] = $event['price'] + get_sheet_price($rank);
+        $reserve_count += $event['sheets'][$rank]['remains'];
+    }
+    $event['remains'] = $event['total'] - $reserve_count;
+
+    return $event;
+}
+
+function get_total_sheets_count($rank) {
+    switch ($rank) {
+        case "S":
+            // select count(*) from sheets where rank="S";
+            $sheet_count = 50;
+            break;
+        case "A":
+            // select count(*) from sheets where rank="A";
+            $sheet_count = 150;
+            break;
+        case "B":
+            // select count(*) from sheets where rank="B";
+            $sheet_count = 300;
+            break;
+        // select count(*) from sheets where rank="C";
+        case "C":
+            $sheet_count = 500;
+            break;
+    }
+    return $sheet_count;
+}
+
+function get_sheet_price($rank) {
+    switch ($rank) {
+        case "S":
+            $sheet_price = 5000;
+            break;
+        case "A":
+            $sheet_price = 3000;
+            break;
+        case "B":
+            $sheet_price = 1000;
+            break;
+        case "C":
+            $sheet_price = 0;
+            break;
+    }
+    return $sheet_price;
+}
+
+//TODO here
+function get_sheets_reserve_count($dbh, $event_id, $rank) {
+    switch ($rank) {
+        case "S":
+            // select min(id), max(id) from sheets where rank="S";
+            $min_sheet_id = 1;
+            $max_sheet_id = 50;
+            break;
+        case "A":
+            // select min(id), max(id) from sheets where rank="A";
+            $min_sheet_id = 51;
+            $max_sheet_id = 200;
+            break;
+        case "B":
+            // select min(id), max(id) from sheets where rank="B";
+            $min_sheet_id = 201;
+            $max_sheet_id = 500;
+            break;
+            // select min(id), max(id) from sheets where rank="C";
+        case "C":
+            $min_sheet_id = 501;
+            $max_sheet_id = 1000;
+            break;
+    }
+
+    return $dbh->select_one('SELECT COUNT(*) FROM reservations WHERE `event_id` = ? AND `sheet_id` >= ? AND `sheet_id` <= ? AND canceled_at IS NULL', $event_id, $min_sheet_id, $max_sheet_id);
 }
 
 function get_event(PDOWrapper $dbh, int $event_id, ?int $login_user_id = null): array
