@@ -874,7 +874,7 @@ $app->get('/admin/api/reports/sales', function (Request $request, Response $resp
             'canceled_at' => $reservation['canceled_at'] ? (new \DateTime("{$reservation['canceled_at']}", new DateTimeZone('UTC')))->format('Y-m-d\TH:i:s.u').'Z' : '',
             //'price' => $reservation['event_price'] + $reservation['sheet_price'],
             //'price' => $reservation['event_price'] + get_sheet_price($sheet_rank)
-            'price' => $events[$reservation['id']]['event_price'] + get_sheet_price($sheet_rank)
+            'price' => $events[$reservation['id']]['price'] + get_sheet_price($sheet_rank)
         ];
 
         array_push($reports, $report);
