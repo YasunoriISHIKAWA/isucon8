@@ -287,9 +287,7 @@ function get_events(PDOWrapper $dbh, ?callable $where = null): array
 function get_event(PDOWrapper $dbh, int $event_id, ?int $login_user_id = null): array
 {
     Analysis::time('get_event');
-    Analysis::time('get_event/events');
     $event = $dbh->select_row('SELECT * FROM events WHERE id = ?', $event_id);
-    Analysis::timeEnd('get_event/events');
 
     if (!$event) {
         return [];
@@ -306,19 +304,14 @@ function get_event(PDOWrapper $dbh, int $event_id, ?int $login_user_id = null): 
         $event['sheets'][$rank]['remains'] = 0;
     }
 
-    Analysis::time('get_event/sheets');
     $sheets = $dbh->select_all('SELECT * FROM sheets ORDER BY `rank`, num');
-    Analysis::timeEnd('get_event/sheets');
-    Analysis::time('get_event/foreach');
     foreach ($sheets as $sheet) {
         $event['sheets'][$sheet['rank']]['price'] = $event['sheets'][$sheet['rank']]['price'] ?? $event['price'] + $sheet['price'];
 
         ++$event['total'];
         ++$event['sheets'][$sheet['rank']]['total'];
 
-        Analysis::time('get_event/reservations');
         $reservation = $dbh->select_row('SELECT * FROM reservations WHERE event_id = ? AND sheet_id = ? AND canceled_at IS NULL GROUP BY event_id, sheet_id HAVING reserved_at = MIN(reserved_at)', $event['id'], $sheet['id']);
-        Analysis::timeEnd('get_event/reservations');
         if ($reservation) {
             $sheet['mine'] = $login_user_id && $reservation['user_id'] == $login_user_id;
             $sheet['reserved'] = true;
@@ -340,7 +333,6 @@ function get_event(PDOWrapper $dbh, int $event_id, ?int $login_user_id = null): 
 
         array_push($event['sheets'][$rank]['detail'], $sheet);
     }
-    Analysis::timeEnd('get_event/foreach');
 
     $event['public'] = $event['public_fg'] ? true : false;
     $event['closed'] = $event['closed_fg'] ? true : false;
