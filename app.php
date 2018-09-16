@@ -406,12 +406,6 @@ function get_event(PDOWrapper $dbh, int $event_id, ?int $login_user_id = null): 
         $event['sheets'][$rank]['remains'] = 0;
     }
 
-    $reservationList = $dbh->select_all('SELECT * FROM reservations WHERE event_id = ? AND canceled_at IS NULL GROUP BY event_id, sheet_id HAVING reserved_at = MIN(reserved_at)', $event['id']);
-    $reservationMap = [];
-    foreach ($reservationList as $reservation) {
-        $reservationMap[$reservation['sheet_id']] = $reservation;
-    }
-
     $sheets = $dbh->select_all('SELECT * FROM sheets ORDER BY `rank`, num');
     foreach ($sheets as $sheet) {
         $event['sheets'][$sheet['rank']]['price'] = $event['sheets'][$sheet['rank']]['price'] ?? $event['price'] + $sheet['price'];
@@ -419,8 +413,7 @@ function get_event(PDOWrapper $dbh, int $event_id, ?int $login_user_id = null): 
         ++$event['total'];
         ++$event['sheets'][$sheet['rank']]['total'];
 
-        //$reservation = $dbh->select_row('SELECT * FROM reservations WHERE event_id = ? AND sheet_id = ? AND canceled_at IS NULL GROUP BY event_id, sheet_id HAVING reserved_at = MIN(reserved_at)', $event['id'], $sheet['id']);
-        $reservation = $reservationMap[$sheet['id']] ?: null;
+        $reservation = $dbh->select_row('SELECT * FROM reservations WHERE event_id = ? AND sheet_id = ? AND canceled_at IS NULL GROUP BY event_id, sheet_id HAVING reserved_at = MIN(reserved_at)', $event['id'], $sheet['id']);
         if ($reservation) {
             $sheet['mine'] = $login_user_id && $reservation['user_id'] == $login_user_id;
             $sheet['reserved'] = true;
