@@ -39,3 +39,5 @@ CREATE TABLE IF NOT EXISTS administrators (
     pass_hash   VARCHAR(128) NOT NULL,
     UNIQUE KEY login_name_uniq (login_name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+ALTER TABLE reservations ADD INDEX user_id_idx(user_id);
