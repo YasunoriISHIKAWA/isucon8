@@ -402,8 +402,8 @@ $app->delete('/api/events/{id}/sheets/{ranks}/{num}/reservation', function (Requ
 
     $user = get_login_user($this);
     // org
-    //$event = get_event($this->dbh, $event_id, $user['id']);
-    $event = get_event_for_delete($this->dbh, $event_id);
+    $event = get_event($this->dbh, $event_id, $user['id']);
+    //$event = get_event_for_delete($this->dbh, $event_id);
 
     if (empty($event) || !$event['public']) {
         return res_error($response, 'invalid_event', 404);
