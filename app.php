@@ -302,14 +302,14 @@ function get_event_summary($dbh, $event_id): array
     $event['total'] = 1000;
     $event['remains'] = 0;
 
-    $reserve_count = 0;
+    $remains_count = 0;
     foreach (['S', 'A', 'B', 'C'] as $rank) {
         $event['sheets'][$rank]['total'] = get_total_sheets_count($rank);
         $event['sheets'][$rank]['remains'] = $event['sheets'][$rank]['total'] - get_sheets_reserve_count($dbh, $event_id, $rank);
         $event['sheets'][$rank]['price'] = $event['price'] + get_sheet_price($rank);
-        $reserve_count += $event['sheets'][$rank]['remains'];
+        $remains_count += $event['sheets'][$rank]['remains'];
     }
-    $event['remains'] = $event['total'] - $reserve_count;
+    $event['remains'] = $remains_count;
 
     return $event;
 }
