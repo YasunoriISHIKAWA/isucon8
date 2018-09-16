@@ -286,6 +286,7 @@ function get_events(PDOWrapper $dbh, ?callable $where = null): array
 
 function get_event(PDOWrapper $dbh, int $event_id, ?int $login_user_id = null): array
 {
+    Analysis::time('get_event');
     $event = $dbh->select_row('SELECT * FROM events WHERE id = ?', $event_id);
 
     if (!$event) {
@@ -339,6 +340,7 @@ function get_event(PDOWrapper $dbh, int $event_id, ?int $login_user_id = null): 
     unset($event['public_fg']);
     unset($event['closed_fg']);
 
+    Analysis::timeEnd('get_event');
     return $event;
 }
 
@@ -682,4 +684,26 @@ function res_error(Response $response, string $error = 'unknown', int $status = 
     return $response->withStatus($status)
         ->withHeader('Content-type', 'application/json')
         ->withJson(['error' => $error]);
+}
+
+class Analysis
+{
+    private static $timeMap = [];
+
+    public static function time($label)
+    {
+        if (empty($label)) {
+            return;
+        }
+        self::$timeMap[$label] = microtime(true);
+    }
+
+    public static function timeEnd($label)
+    {
+        if (empty($label)) {
+            return;
+        }
+        error_log($label . ' depth=' . count(self::$timeMap) . ' time=' . floor((microtime(true) - self::$timeMap[$label]) * 1000) . 'ms' . "\n", 3, '/tmp/analysis.log');
+        unset(self::$timeMap[$label]);
+    }
 }
