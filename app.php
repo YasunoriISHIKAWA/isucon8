@@ -151,7 +151,6 @@ $app->get('/api/users/{id}', function (Request $request, Response $response, arr
         return res_error($response, 'forbidden', 403);
     }
 
-    Analysis::time('users/recent_reservations');
     $recent_reservations = function (ContainerInterface $app) use ($user) {
         $recent_reservations = [];
 
@@ -182,12 +181,10 @@ $app->get('/api/users/{id}', function (Request $request, Response $response, arr
 
         return $recent_reservations;
     };
-    Analysis::timeEnd('users/recent_reservations');
 
     $user['recent_reservations'] = $recent_reservations($this);
     $user['total_price'] = $this->dbh->select_one('SELECT IFNULL(SUM(e.price + s.price), 0) FROM reservations r INNER JOIN sheets s ON s.id = r.sheet_id INNER JOIN events e ON e.id = r.event_id WHERE r.user_id = ? AND r.canceled_at IS NULL', $user['id']);
 
-    Analysis::time('users/recent_events');
     $recent_events = function (ContainerInterface $app) use ($user) {
         $recent_events = [];
 
@@ -202,7 +199,6 @@ $app->get('/api/users/{id}', function (Request $request, Response $response, arr
 
         return $recent_events;
     };
-    Analysis::timeEnd('users/recent_events');
 
     $user['recent_events'] = $recent_events($this);
 
