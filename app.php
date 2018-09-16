@@ -155,11 +155,12 @@ $app->get('/api/users/{id}', function (Request $request, Response $response, arr
 
         $rows = $app->dbh->select_all('SELECT r.*, s.rank AS sheet_rank, s.num AS sheet_num FROM reservations r INNER JOIN sheets s ON s.id = r.sheet_id WHERE r.user_id = ? ORDER BY IFNULL(r.canceled_at, r.reserved_at) DESC LIMIT 5', $user['id']);
         foreach ($rows as $row) {
-            $event = get_event($app->dbh, $row['event_id']);
+            //$event = get_event($app->dbh, $row['event_id']);
+            $event = get_event_for_user($app->dbh, $row['event_id']);
             $price = $event['sheets'][$row['sheet_rank']]['price'];
             unset($event['sheets']);
-            unset($event['total']);
-            unset($event['remains']);
+            //unset($event['total']);
+            //unset($event['remains']);
 
             $reservation = [
                 'id' => $row['id'],
@@ -439,6 +440,31 @@ function get_event(PDOWrapper $dbh, int $event_id, ?int $login_user_id = null): 
     unset($event['closed_fg']);
 
     Analysis::timeEnd('get_event');
+    return $event;
+}
+
+function get_event_for_user(PDOWrapper $dbh, int $event_id, ?int $login_user_id = null): array
+{
+    Analysis::time('get_event_for_user');
+    $event = $dbh->select_row('SELECT * FROM events WHERE id = ?', $event_id);
+
+    if (!$event) {
+        return [];
+    }
+
+    $event['id'] = (int) $event['id'];
+
+    foreach (['S', 'A', 'B', 'C'] as $rank) {
+        $event['sheets'][$rank]['price'] = $event['price'] + get_sheet_price($rank);
+    }
+
+    $event['public'] = $event['public_fg'] ? true : false;
+    $event['closed'] = $event['closed_fg'] ? true : false;
+
+    unset($event['public_fg']);
+    unset($event['closed_fg']);
+
+    Analysis::timeEnd('get_event_for_user');
     return $event;
 }
 
