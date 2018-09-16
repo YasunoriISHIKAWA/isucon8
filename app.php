@@ -496,6 +496,7 @@ function get_event_for_user_recent(PDOWrapper $dbh, int $event_id, ?int $login_u
     $event['total'] = 1000;
     $event['remains'] = 0;
 
+    $remains_count = 0;
     foreach (['S', 'A', 'B', 'C'] as $rank) {
         $event['sheets'][$rank]['total'] = get_total_sheets_count($rank);
         $event['sheets'][$rank]['remains'] = $event['sheets'][$rank]['total'] - get_sheets_reserve_count($dbh, $event_id, $rank);
