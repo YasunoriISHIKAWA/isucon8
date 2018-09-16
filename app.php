@@ -155,11 +155,13 @@ $app->get('/api/users/{id}', function (Request $request, Response $response, arr
 
         $rows = $app->dbh->select_all('SELECT r.*, s.rank AS sheet_rank, s.num AS sheet_num FROM reservations r INNER JOIN sheets s ON s.id = r.sheet_id WHERE r.user_id = ? ORDER BY IFNULL(r.canceled_at, r.reserved_at) DESC LIMIT 5', $user['id']);
         foreach ($rows as $row) {
-            $event = get_event($app->dbh, $row['event_id']);
-            $price = $event['sheets'][$row['sheet_rank']]['price'];
-            unset($event['sheets']);
-            unset($event['total']);
-            unset($event['remains']);
+            //$event = get_event($app->dbh, $row['event_id']);
+            //$price = $event['sheets'][$row['sheet_rank']]['price'];
+            //unset($event['sheets']);
+            //unset($event['total']);
+            //unset($event['remains']);
+            $event = get_event_for_delete($app->dbh, $row['event_id']);
+            $price = get_sheet_price($row['sheet_rank']);
 
             $reservation = [
                 'id' => $row['id'],
