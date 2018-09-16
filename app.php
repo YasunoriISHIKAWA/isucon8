@@ -797,7 +797,8 @@ $app->get('/admin/api/reports/events/{id}/sales', function (Request $request, Re
     //org
     //$reservations = $this->dbh->select_all('SELECT r.*, s.rank AS sheet_rank, s.num AS sheet_num, s.price AS sheet_price, e.price AS event_price FROM reservations r INNER JOIN sheets s ON s.id = r.sheet_id INNER JOIN events e ON e.id = r.event_id WHERE r.event_id = ? ORDER BY reserved_at ASC FOR UPDATE', $event['id']);
     //$reservations = $this->dbh->select_all('SELECT r.*, e.price AS event_price FROM reservations r INNER JOIN events e ON e.id = r.event_id WHERE r.event_id = ? ORDER BY reserved_at ASC FOR UPDATE', $event['id']);
-    $reservations = $this->dbh->select_all('SELECT * FROM reservations WHERE event_id = ? ORDER BY reserved_at ASC FOR UPDATE', $event['id']);
+    //$reservations = $this->dbh->select_all('SELECT * FROM reservations WHERE event_id = ? ORDER BY reserved_at ASC FOR UPDATE', $event['id']);
+    $reservations = $this->dbh->select_all('SELECT * FROM reservations WHERE event_id = ? ORDER BY reserved_at ASC', $event['id']);
     foreach ($reservations as $reservation) {
         $sheet_id = $reservation['sheet_id'];
         $sheet_num = get_sheet_num($reservation['sheet_id']);
@@ -858,7 +859,8 @@ $app->get('/admin/api/reports/sales', function (Request $request, Response $resp
 
     //$reservations = $this->dbh->select_all('SELECT r.*, s.rank AS sheet_rank, s.num AS sheet_num, s.price AS sheet_price, e.id AS event_id, e.price AS event_price FROM reservations r INNER JOIN sheets s ON s.id = r.sheet_id INNER JOIN events e ON e.id = r.event_id ORDER BY reserved_at ASC FOR UPDATE');
     //$reservations = $this->dbh->select_all('SELECT r.*, e.id AS event_id, e.price AS event_price FROM reservations r INNER JOIN events e ON e.id = r.event_id ORDER BY reserved_at ASC FOR UPDATE');
-    $reservations = $this->dbh->select_all('SELECT * FROM reservations ORDER BY reserved_at ASC FOR UPDATE');
+    //$reservations = $this->dbh->select_all('SELECT * FROM reservations ORDER BY reserved_at ASC FOR UPDATE');
+    $reservations = $this->dbh->select_all('SELECT * FROM reservations ORDER BY reserved_at ASC');
     foreach ($reservations as $reservation) {
         $sheet_id = $reservation['sheet_id'];
         $sheet_num = get_sheet_num($reservation['sheet_id']);
