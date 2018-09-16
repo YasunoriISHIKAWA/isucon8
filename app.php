@@ -190,7 +190,8 @@ $app->get('/api/users/{id}', function (Request $request, Response $response, arr
 
         $rows = $app->dbh->select_all('SELECT event_id FROM reservations WHERE user_id = ? GROUP BY event_id ORDER BY MAX(IFNULL(canceled_at, reserved_at)) DESC LIMIT 5', $user['id']);
         foreach ($rows as $row) {
-            $event = get_event($app->dbh, $row['event_id']);
+            //$event = get_event($app->dbh, $row['event_id']);
+            $event = get_event_summary($app->dbh, $row['event_id']);
             foreach (array_keys($event['sheets']) as $rank) {
                 unset($event['sheets'][$rank]['detail']);
             }
