@@ -747,17 +747,26 @@ $app->get('/admin/api/reports/events/{id}/sales', function (Request $request, Re
 
     $reports = [];
 
-    $reservations = $this->dbh->select_all('SELECT r.*, s.rank AS sheet_rank, s.num AS sheet_num, s.price AS sheet_price, e.price AS event_price FROM reservations r INNER JOIN sheets s ON s.id = r.sheet_id INNER JOIN events e ON e.id = r.event_id WHERE r.event_id = ? ORDER BY reserved_at ASC FOR UPDATE', $event['id']);
+    //org
+    //$reservations = $this->dbh->select_all('SELECT r.*, s.rank AS sheet_rank, s.num AS sheet_num, s.price AS sheet_price, e.price AS event_price FROM reservations r INNER JOIN sheets s ON s.id = r.sheet_id INNER JOIN events e ON e.id = r.event_id WHERE r.event_id = ? ORDER BY reserved_at ASC FOR UPDATE', $event['id']);
+    $reservations = $this->dbh->select_all('SELECT r.*, e.price AS event_price FROM reservations r INNER JOIN events e ON e.id = r.event_id WHERE r.event_id = ? ORDER BY reserved_at ASC FOR UPDATE', $event['id']);
     foreach ($reservations as $reservation) {
+        $sheet_id = $reservation['sheet_id'];
+        $sheet_num = get_sheet_num($reservation['sheet_id']);
+        $sheet_rank = get_sheet_rank($sheet_id);
         $report = [
             'reservation_id' => $reservation['id'],
             'event_id' => $reservation['event_id'],
-            'rank' => $reservation['sheet_rank'],
-            'num' => $reservation['sheet_num'],
+            //'rank' => $reservation['sheet_rank'],
+            'rank' => $sheet_rank,
+            //'num' => $reservation['sheet_num'],
+            'num' => $sheet_num,
             'user_id' => $reservation['user_id'],
             'sold_at' => (new \DateTime("{$reservation['reserved_at']}", new DateTimeZone('UTC')))->format('Y-m-d\TH:i:s.u').'Z',
             'canceled_at' => $reservation['canceled_at'] ? (new \DateTime("{$reservation['canceled_at']}", new DateTimeZone('UTC')))->format('Y-m-d\TH:i:s.u').'Z' : '',
-            'price' => $reservation['event_price'] + $reservation['sheet_price'],
+            //org
+            //'price' => $reservation['event_price'] + $reservation['sheet_price'],
+            'price' => $reservation['event_price'] + get_sheet_price($sheet_rank)
         ];
 
         array_push($reports, $report);
@@ -765,6 +774,33 @@ $app->get('/admin/api/reports/events/{id}/sales', function (Request $request, Re
 
     return render_report_csv($response, $reports);
 });
+
+function get_sheet_num($sheet_id) {
+    if ($sheet_id >= 1 && $sheet_id <= 50) {
+        return $sheet_id;
+    } elseif ($sheet_id >= 51 && $sheet_id <= 200) {
+        return $sheet_id - 50;
+    } elseif ($sheet_id >= 201 && $sheet_id <= 500) {
+        return $sheet_id - 200;
+    } elseif ($sheet_id >= 501 && $sheet_id <= 1000) {
+        return $sheet_id - 500;
+    }
+    return;
+}
+
+//TODO here
+function get_sheet_rank($sheet_num) {
+    if ($sheet_num >= 1 && $sheet_num <= 50) {
+        return "S";
+    } elseif ($sheet_num >= 51 && $sheet_num <= 200) {
+        return "A";
+    } elseif ($sheet_num >= 201 && $sheet_num <= 500) {
+        return "B";
+    } elseif ($sheet_num >= 501 && $sheet_num <= 1000) {
+        return "C";
+    }
+    return;
+}
 
 $app->get('/admin/api/reports/sales', function (Request $request, Response $response): Response {
     $reports = [];
